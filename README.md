@@ -1,4 +1,4 @@
-# lamp_centos_ansible
+# gitea_centos_ansible
 
 
 This script install on RedHat based Distributions Gitea
