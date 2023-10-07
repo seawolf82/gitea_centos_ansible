@@ -1,0 +1,8 @@
+- name: Terminate running gitea, mysql and remove all files
+  hosts: gitea-servers
+  remote_user: root
+  roles:
+    - mariadb_uninstall
+    - gitea_uninstall
+    
+

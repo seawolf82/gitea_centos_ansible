@@ -1,0 +1,91 @@
+---
+
+
+- name: disable gitea service
+  systemd:
+    name: gitea
+    enabled: false
+    
+
+- name: Make sure gitea service is stopped
+  systemd:
+    state: stopped
+    name: gitea
+    
+
+- name: disable supervisord service
+  systemd:
+    name: supervisord
+    enabled: false
+    
+
+- name: Make sure supervisor service is stopped
+  systemd:
+    state: stopped
+    name: supervisord
+
+- name: Reload systemd
+  systemd: daemon_reload=yes
+
+
+- name: Removing firewalld rules for gitea
+  firewalld:
+    port: 3000/tcp
+    permanent: true
+    immediate: true
+    state: disabled
+  notify: Reloading firewalld rules
+
+
+- name: Recursively remove directory /etc/supervisord.d
+  file:
+    path: /etc/supervisord.d
+    state: absent
+
+
+- name: Recursively remove directory /etc/gitea
+  file:
+    path: /etc/gitea
+    state: absent
+
+
+- name: Recursively remove directory log/supervisor
+  file:
+    path: "{{ supervisor_log_directory }}"
+    state: absent
+
+- name: Recursively remove directory /var/lib/gitea/
+  file:
+    path: /var/lib/gitea/
+    state: absent
+
+- name: Remove supervisor package
+  package:
+    name: supervisor
+    state: absent
+
+- name: Remove git package
+  package:
+    name: git
+    state: absent
+
+- name: Remove gitea.service from /etc/systemd/system/
+  file:
+    path: /etc/systemd/system/gitea.service
+    state: absent
+
+- name: Remove the user 'git'
+  user:
+    name: git
+    state: absent
+    remove: yes
+
+- name: Remove group "git" 
+  group:
+    name: git
+    state: absent
+
+- name: Remove gitea executable
+  file:
+    path: /usr/local/bin/gitea
+    state: absent

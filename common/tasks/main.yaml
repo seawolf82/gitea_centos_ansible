@@ -1,0 +1,116 @@
+---
+
+
+- name: upgrade all packages 
+  yum:
+    name: "*"
+    state: latest
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
+  tags: upgrade
+
+- name: ensure a list of packages installed
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - wget
+    - curl
+    - bash-completion
+    - vim
+    - zip
+    - bzip2
+    - gzip
+    - net-tools
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
+  tags: package
+
+
+- name: upgrade all packages 
+  dnf:
+    name: "*"
+    state: latest
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+  tags: upgrade
+
+- name: ensure a list of packages installed
+  dnf:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - wget
+    - curl
+    - bash-completion
+    - vim
+    - zip
+    - bzip2
+    - gzip
+    - net-tools
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+  tags: package
+
+- name: Install epel package
+  package:
+    name: epel-release
+    state: present
+  tags: package
+
+- name: Install htop
+  package: 
+    name: htop
+    state: present
+  tags: package
+
+
+- name: adding firewall rules for ntp service
+  command: firewall-cmd --add-service=ntp --permanent
+  notify: Reloading firewalld rules
+  tags: chrony
+
+- name: Ensure chrony packages is installed
+  package: 
+    name: chrony
+    state: present
+  tags: chrony
+
+- name: Ensure tzdata package is installed (Linux).
+  package:
+    name: tzdata
+    state: present
+  tags: package
+
+
+- name: Ensure rsyslog package is installed
+  package:
+    name: rsyslog
+    state: present
+  tags: package
+
+
+- name: Ensure rsyslog is running and enabled as configured
+  service:
+    name: rsyslog
+    state: started
+    enabled: yes
+  tags: package
+
+
+- name: Copy chrony conf file into /etc
+  copy:
+    src: chrony.conf
+    dest: /etc/chrony.conf 
+  tags: chrony
+
+  
+- name: Restart chronyd daemon
+  systemd:
+    name: chronyd
+    state: restarted 
+  tags: chrony
+
+- name: Ensure chronyd is running and enabled as configured
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
+  tags: chrony
+

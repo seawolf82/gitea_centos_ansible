@@ -1,0 +1,51 @@
+---
+
+- name: disable MariaDB service
+  systemd:
+    name: mariadb
+    enabled: false
+    
+
+- name: Make sure MariaDB service is stopped
+  systemd:
+    state: stopped
+    name: mariadb
+    
+    
+- name: Remove a list of MariaDB packages
+  dnf:
+    name: "{{ packages }}"
+    state: absent
+  vars:
+    packages:
+    - mariadb-server
+    - mariadb
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+  tags: mariadb
+
+
+- name: Remove a list of MariaDB packages
+  yum:
+    name: "{{ packages }}"
+    state: absent
+  vars:
+    packages:
+    - mariadb-server
+    - mariadb
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
+  tags: mariadb
+
+- name: Remove mysql_connect_any flag on and keep it persistent across reboots
+  seboolean:
+    name: mysql_connect_any
+    state: no
+
+
+- name: removing firewalld rules for mariadb
+  firewalld:
+    service: mysql
+    permanent: true
+    immediate: true
+    state: disabled
+  tags: mariadb
+

@@ -1,0 +1,22 @@
+---
+
+# Gitea Variables
+
+version: 1.21
+package: gitea-1.21-linux-amd64
+
+
+# Supervisor Variables
+
+supervisor_log_directory: /home/git/gitea/log/supervisor
+
+
+
+# MariaDb Variables
+
+mysql_root_password: 'mysql_root'
+mysql_server_id: 1
+mysql_auto_increment_increment: 1
+mysql_auto_increment_offset: 1
+
+

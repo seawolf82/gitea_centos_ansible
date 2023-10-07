@@ -1,0 +1,10 @@
+
+- name: Install Gitea server
+  hosts: gitea-servers
+  remote_user: root
+  roles:
+    - common
+    - mariadb
+    - gitea
+
+

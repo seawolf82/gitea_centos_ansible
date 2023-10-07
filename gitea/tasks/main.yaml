@@ -1,0 +1,145 @@
+---
+
+- name: Install git package
+  package:
+    name: git
+    state: present
+  tags: gitea
+
+
+- name: Download gitea from repository
+  get_url:
+    url: https://dl.gitea.com/gitea/{{ version }}/{{ package }}
+    dest: /usr/local/bin/gitea
+    mode: '0755'
+  tags: gitea
+
+
+- name: Ensure group "git" exists as system group
+  group:
+    name: git
+    system: yes
+    state: present
+  tags: gitea
+
+
+- name: Add the user 'git' with a specific uid and a primary group of 'admin'
+  user:
+    name: git
+    comment: Git Version Control
+    group: git
+    shell: /bin/bash
+    create_home: yes
+    home: /home/git
+  tags: gitea
+
+
+- name: Create gitea directory if it does not exist into /var/lib/gitea
+  file:
+    path: /var/lib/gitea/{custom,data,log}
+    state: directory
+  tags: gitea
+
+- name: Make sure the custom, data and log directories exist
+  file:
+    path: /var/lib/gitea/
+    recurse: yes
+    state: directory
+  with_items: ["custom", "data", "log"]
+  tags: gitea
+
+- name: Change file ownership, group and permissions
+  file:
+    path: /var/lib/gitea
+    recurse: yes
+    owner: git
+    group: git
+    mode: '750'
+  tags: gitea
+
+
+- name: Create /etc/gitea directory if it does not exist
+  file:
+    path: /etc/gitea
+    state: directory
+  tags: gitea
+
+
+- name: Change file ownership, group and permissions
+  file:
+    path: /etc/gitea
+    recurse: yes
+    owner: root
+    group: git
+    mode: '770'
+  tags: gitea
+
+- name: Copy file gitea.service into /etc/systemd/system/
+  copy:
+    src: gitea.service
+    dest: /etc/systemd/system/gitea.service
+    owner: root
+    group: root
+    mode: '0644'
+  tags: gitea
+
+- name: Reload systemd
+  systemd: daemon_reload=yes
+  tags: gitea
+
+
+- name: Ensure gitea is running and enabled as configured
+  service:
+    name: gitea
+    state: started
+    enabled: yes
+  tags: gitea
+
+
+- name: Install supervisor package
+  package:
+    name: supervisor
+    state: present
+  tags: gitea
+
+
+- name: Create supervisor log directory if it does not exist
+  file:
+    path: "{{ supervisor_log_directory }}"
+    state: directory
+  tags: gitea
+
+
+
+- name: Copy file supervisord.conf into /etc/supervisord.d/ backing up the original if it differs from the copied version
+  copy:
+    src: supervisord.conf
+    dest: /etc/supervisord.d/supervisord.conf
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  tags: gitea
+
+- name: Reload systemd
+  systemd: daemon_reload=yes
+  tags: gitea
+
+- name: Ensure supervisor is running and enabled as configured
+  service:
+    name: supervisord
+    state: started
+    enabled: yes
+  tags: gitea
+
+
+- name: adding firewalld rules for gitea
+  firewalld:
+    port: 3000/tcp
+    permanent: true
+    immediate: true
+    state: enabled
+  notify: Reloading firewalld rules
+  tags: gitea
+
+
